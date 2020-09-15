@@ -1,0 +1,424 @@
+<template>
+  <div class="editorBlock">
+    <el-form ref="form" :model="activeArticle" label-width="80px" class="editorForm">
+      <!-- 标题和简介 -->
+      <div class="editHdInfo">
+        <div class="editTitle"><input v-model="activeArticle.title" placeholder="请在这里输入标题" maxlength="64" type="text" @focus="inputFocus('title')" @blur="inputBlur('title')" @input="lengthChange('title')"><span v-show="showTitleLength">{{ titleLength }}/64</span></div>
+        <div class="editAuthor"><input v-model="activeArticle.author" placeholder="请输入作者" maxlength="8" type="text" @focus="inputFocus('author')" @blur="inputBlur('author')" @input="lengthChange('author')"><span v-show="showAuthorLength">{{ authorLength }}/8</span></div>
+      </div>
+      <!-- 编辑器 -->
+      <froala :tag="'textarea'" :config="config" v-model="activeArticle.content"></froala>
+      <!-- 封面和摘要 -->
+      <div class="imgDesc block">
+        <div class="name imgDescName">封面和摘要</div>
+        <div class="imgDescContent">
+          <el-tooltip class="item" popper-class="imgDescPopper" effect="dark" placement="bottom">
+            <div slot="content">
+              <a href="#">从正文选择</a>
+              <el-divider direction="vertical"></el-divider>
+              <a href="#">从图片库选择</a>
+            </div>
+            <div class="chooseImg">
+              <i class="el-icon-plus"></i>
+              <p>选择封面</p>
+            </div>
+          </el-tooltip>
+          <div class="descBlock">
+            <el-input
+              type="textarea"
+              :rows="3"
+              placeholder="选填，摘要会在订阅号消息、转发链接等文章外的场景显露，帮助读者快速了解内容，如不填写则默认抓取正文前54字"
+              v-model="activeArticle.desc"
+              maxlength="120"
+              @input="lengthChange('desc')">
+            </el-input>
+            <div class="length">{{ descLength }}/120</div>
+          </div>
+        </div>
+      </div>
+      <!-- 原创 -->
+      <div class="original block">
+        <div class="name">原创：未声明</div>
+        <div class="originalContent">
+          <button class="">声明原创</button>
+        </div>
+      </div>
+      <!-- 文章设置 -->
+
+      <div class="setting block">
+        <div class="name">文章设置</div>
+        <el-popover
+          width="400"
+          placement="top-start"
+          trigger="hover">
+          <el-form label-width="80px">
+            <el-form-item label="链接地址">
+              <el-input v-model="activeArticle.link"></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="success" class="setEnsure" @click="setEnsure">确定</el-button>
+              <el-button>取消</el-button>
+            </el-form-item>
+          </el-form>
+          <div class="settingContent" slot="reference">
+            <el-checkbox v-model="checked">原文链接<i class="el-icon-arrow-right"></i></el-checkbox>
+          </div>
+        </el-popover>
+      </div>
+      <!-- 底部操作 -->
+      <div class="bottom">
+        <div class="bottomMain">
+          正文字数  0
+          <div class="buttonList">
+            <button class="save">保存</button>
+            <button>预览</button>
+            <button>保存并群发</button>
+          </div>
+        </div>
+      </div>
+    </el-form>
+  </div>
+</template>
+
+<script>
+  import Froala from 'vue-froala-wysiwyg'
+
+  export default {
+    component:{
+      Froala
+    },
+    data() {
+      return {
+        config: {
+          events: {
+            'froalaEditor.initialized': function() {
+              console.log('initialized')
+            },
+            'froalaEditor.input': function(inputEvent) {
+              console.log(inputEvent)
+            }
+          },
+          language: 'zh_cn',
+          placeholderText: '从这里开始写正文',
+          imageUploadURL: './'
+        },
+        model: '', // 初始值
+        titleLength: 0,
+        authorLength: 0,
+        descLength: 0,
+        checked: false,
+        showTitleLength: false,
+        showAuthorLength: false,
+        activeArticle: {}
+      }
+    },
+    watch: {
+      activeArticle: {
+        handler(newValue, oldValue) { // oldValue是activeArticle变化之前的值，newValue是activeArticle变化之后的值
+          this.$emit('articleChange', newValue)
+          console.log(oldValue)
+        },
+        deep: true
+      }
+    },
+    methods: {
+      lengthChange: function(e) { // 标题、作者、摘要长度计算
+        if (e === 'title') {
+          this.titleLength = this.activeArticle.title.length
+        } else if (e === 'author') {
+          this.authorLength = this.activeArticle.author.length
+        } else {
+          this.descLength = this.activeArticle.desc.length
+        }
+      },
+      inputFocus: function(e) { // 标题、作者输入框聚焦事件
+        if (e === 'title') {
+          this.showTitleLength = true
+        } else {
+          this.showAuthorLength = true
+        }
+      },
+      inputBlur: function(e) { // 标题、作者输入框失焦事件
+        if (e === 'title') {
+          this.showTitleLength = false
+        } else {
+          this.showAuthorLength = false
+        }
+      },
+      setEnsure: function() { // 原文链接确定
+        this.checked = true
+      }
+    }
+  }
+</script>
+<style lang="scss" scoped>
+  .editorBlock{
+    padding-top: 60px;
+    .name{
+      font-size: 16px;
+      color: #353535;
+      margin-bottom: 10px;
+    }
+    .block{
+      width: 768px;
+      padding: 0 95px 30px;
+      margin: 0 auto;
+      background: #ffffff;
+    }
+    .editHdInfo{
+      margin: 0 auto 0;
+      width: 768px;
+      padding: 20px 95px 5px;
+      background: #ffffff;
+      z-index: 20;
+      input:focus{
+        outline: none;
+      }
+      input::placeholder {
+        color: #a3a3a3;
+      }
+      .editTitle{
+        position: relative;
+        padding-right: 60px;
+        margin: 10px 0;
+        input{
+          width: 100%;
+          border: none;
+          font-size: 24px;
+          font-weight: 500;
+          height: 30px;
+          line-height: 30px;
+        }
+        span{
+          position: absolute;
+          right: 0;
+          color: #a3a3a3;
+          font-size: 14px;
+        }
+      }
+      .editAuthor{
+        position: relative;
+        padding-right: 60px;
+        input{
+          width: 100%;
+          border: none;
+          font-size: 14px;
+        }
+        span{
+          position: absolute;
+          right: 0;
+          color: #a3a3a3;
+          font-size: 14px;
+        }
+      }
+    }
+    .imgDesc{
+      .imgDescName{
+        padding-top: 20px;
+        border-top: 1px solid #ebebeb;
+      }
+      .imgDescContent{
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        .chooseImg{
+          display: block;
+          width: 211.5px;
+          height: 90px;
+          box-sizing: border-box;
+          border: 2px dashed #ebebeb;
+          color: #07c160;
+          text-align: center;
+          padding-top: 16px;
+          font-size: 14px;
+          -webkit-transition: all .1s;
+          transition: all .1s;
+          margin-right: 10px;
+          i{
+            width: 40px;
+            font-size: 20px;
+          }
+          p{
+            margin-top: 7px;
+          }
+        }
+        .descBlock{
+          flex: 1;
+          height: 90px;
+          border: 1px solid #e7e7eb;
+          position: relative;
+          .el-textarea{
+            height: 80px;
+          }
+          .length{
+            text-align: right;
+            font-size: 12px;
+            color: #9a9a9a;
+            padding-right: 10px;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+          }
+        }
+      }
+    }
+    .original{
+      button{
+        width: 80px;
+        height: 30px;
+        font-size: 14px;
+        border-radius: 3px;
+        color: #07c160;
+        border: 1px solid #07c160;
+        padding: 0 10px;
+        background: #ffffff;
+      }
+    }
+    .setting{
+      .settingContent{
+        width: 150px;
+      }
+    }
+    .bottom{
+      margin: 0 auto;
+      width: 768px;
+      z-index: 60;
+      position: relative;
+      height: 64px;
+      .bottomMain{
+        display: flex;
+        align-items: center;
+        position: fixed;
+        padding: 20px 60px 15px 30px;
+        width: 768px;
+        bottom: 0;
+        background: #ffffff;
+        color: #9a9a9a;
+        box-shadow: 0 -1px 4px 0 rgba(0,0,0,0.05);
+        font-size: 14px;
+        .buttonList{
+          margin-left: auto;
+          button{
+            width: 100px;
+            height: 30px;
+            background: #ffffff;
+            border: 1px solid #e7e7eb;
+            font-size: 14px;
+            line-height: 30px;
+            margin-left: 12px;
+            border-radius: 3px;
+            padding: 0;
+          }
+          button:hover{
+            background-color: #e7e7eb;
+            border-color: #dadbe0;
+          }
+          .save{
+            background-color: #07c160;
+            border-color: #07c160;
+            color: #ffffff;
+          }
+          button.save:hover{
+            background-color: #06ad56;
+            border-color: #06ad56;
+          }
+        }
+      }
+    }
+  }
+  .setEnsure{
+    background: #07c160;
+  }
+
+  @media (max-width:1600px) {
+    .editorForm{
+      padding-left: 375px;
+    }
+  }
+
+  @media (max-width:1200px) {
+    .editorForm{
+      padding-left: 0;
+    }
+  }
+</style>
+<style>
+  .editor .fr-box{
+    width: 768px;
+    margin: 0 auto;
+  }
+  .editor .fr-toolbar.fr-top{
+    box-shadow: none;
+    border: none;
+    background: #fafafa;
+    position: fixed;
+    top: 0px !important;
+    width: 100% !important;
+    left: 0;
+  }
+  .fr-sticky-dummy{
+    height: 0 !important;
+  }
+  .editor .fr-box.fr-basic.fr-top .fr-wrapper{
+    width: 768px;
+    padding: 20px 95px 0;
+    margin: 0 auto 0;
+    box-shadow: none;
+    font-size: 14px;
+    min-height: 600px;
+  }
+  .fr-toolbar .fr-command.fr-btn,.fr-popup .fr-command.fr-btn{
+    color: #4a4a51;
+  }
+  .editor .fr-box.fr-basic .fr-element {
+    padding: 0;
+  }
+  .editor .el-textarea__inner{
+    border: none;
+    resize:none
+  }
+  .editor .el-checkbox__input.is-checked .el-checkbox__inner, .editor .el-checkbox__input.is-indeterminate .el-checkbox__inner{
+    background-color: #07c160;
+    border-color: #07c160;
+  }
+  .editor .el-checkbox__input.is-focus .el-checkbox__inner, .el-checkbox__inner:hover{
+    border-color: #07c160;
+  }
+  .editor .el-checkbox__input.is-checked+.el-checkbox__label{
+    color: #07c160;
+  }
+  .editor .fr-box .fr-counter{
+    position: fixed;
+    bottom: 16px !important;
+    margin-right: 0px;
+    z-index: 62;
+    right: unset;
+    margin-left: 88px;
+    border: none;
+    color: #9a9a9a;
+  }
+  .imgDescPopper.el-tooltip__popper.is-dark{
+    top: 900px !important;
+  }
+  .el-input.is-active .el-input__inner, .el-input__inner:focus{
+    border-color: #07c160;
+  }
+  .el-button--default:focus, .el-button--default:hover {
+    color: #07c160;
+    border-color: #ebfff5;
+    background-color: #c7efda;
+  }
+
+  ::-webkit-scrollbar { /*滚动条整体样式*/
+    width : 5px;  /*纵向滚动条的宽度*/
+    height: 5px;  /*横向滚动条的高度*/
+  }
+  ::-webkit-scrollbar-thumb { /*滚动条的滑块*/
+    border-radius: 5px;
+    background   : #c1c1c1;
+  }
+  ::-webkit-scrollbar-track { /*滚动条区域*/
+    border-radius: 5px;
+    background   : #ededed;
+  }
+</style>

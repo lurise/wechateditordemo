@@ -1,0 +1,284 @@
+<template>
+  <div class="pageEditorContent">
+    <div class="moreList" @click="changeLeftShow">
+      <div class="circle"><i class="el-icon-s-unfold"></i></div>
+    </div>
+    <div :class="leftshow ? 'articleList show' : 'articleList'">
+      <div class="leftBack" @click="changeLeftShow"><i class="el-icon-arrow-left"></i></div>
+      <div class="mainArticle">
+        <div class="gzhInfo">
+          <img src="../assets/64.jpg">
+          公众号名称
+        </div>
+        <div>
+          <div v-for="(item, index) in gzhArticleData" :key="index" :class="activeIndex == index ? 'articleItem active' : 'articleItem'" @click="activeChange(index)">
+            <div v-if="index == 0" class="firstArticle">
+              <div class="img">
+                <img v-if="item.img" :src="item.img">
+              </div>
+              <div class="title">
+                <p>{{ item. title }}</p>
+              </div>
+            </div>
+            <div v-else class="normalArticle">
+              <div class="title">
+                <p>{{ item. title }}</p>
+              </div>
+              <div class="img">
+                <img v-if="item.img" :src="item.img">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-if="gzhArticleData.length < 8" class="addBlock" @click="addArticle">
+          <i class="el-icon-plus"></i>
+          新建消息
+        </div>
+      </div>
+    </div>
+    <div v-show="leftshow" class="leftShadow" @click="changeLeftShow"></div>
+    <editor class="editor" ref="editor" @articleChange="articleChange"></editor>
+  </div>
+</template>
+
+<script>
+  import editor from './froala'
+  export default {
+    components: {
+      editor
+    },
+    data() {
+      return {
+        gzhArticleData: [{
+          title: '', // 标题
+          img: '', // 封面图
+          author: '', // 作者
+          desc: '', // 简介
+          content: '', // 正文
+          original: '', // 是否原创
+          link: ''
+        }],
+        activeIndex: 0,
+        activeArticle: {
+          title: '', // 标题
+          img: '', // 封面图
+          author: '', // 作者
+          desc: '', // 简介
+          content: '', // 正文
+          original: '', // 是否原创
+          link: ''
+        },
+        leftshow: false
+      }
+    },
+    mounted() {
+      this.$refs.editor.activeArticle = this.activeArticle
+    },
+    methods: {
+      addArticle: function() { // 添加文章
+        this.gzhArticleData.push({
+          title: '', // 标题
+          img: '', // 封面图
+          author: '', // 作者
+          desc: '', // 简介
+          content: '', // 正文
+          original: '', // 是否原创
+          link: ''
+        })
+      },
+      activeChange: function(index) { // 切换文章
+        this.activeIndex = index
+        this.$refs.editor.activeArticle = this.gzhArticleData[index]
+      },
+      articleChange: function(data) {
+        this.activeArticle = data
+        console.log(this.activeIndex)
+        this.$set(this.gzhArticleData, this.activeIndex, data)
+      },
+      changeLeftShow: function() { // 列表显示隐藏
+        this.leftshow = !this.leftshow
+      }
+    }
+  }
+</script>
+
+<style lang="scss" scoped>
+  .pageEditorContent{
+    min-height: calc(100vh - 50px);
+    background: #f5f5f5;
+    position: relative;
+    .moreList{
+      display: none;
+      position: fixed;
+      top: 100px;
+      background: #ffffff;
+      width: 52px;
+      height: 40px;
+      border-bottom-right-radius: 20px;
+      border-top-right-radius: 20px;
+      box-shadow: 0 1px 4px 0 rgba(0,0,0,0.2);
+      align-items: center;
+      z-index: 10;
+      cursor: pointer;
+      .circle{
+        border: 1px solid #4a4a51;
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+        margin-left: auto;
+        border-radius: 50%;
+        text-align: center;
+        i{
+          font-size: 14px;
+        }
+      }
+    }
+    .articleList{
+      padding: 130px 30px;
+      position: fixed;
+      top: 0px;
+      height: 100vh;
+      overflow: auto;
+      .leftBack{
+        position: absolute;
+        top: 10px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid #e4e8eb;
+        text-align: center;
+        line-height: 40px;
+        cursor: pointer;
+        i{
+          font-weight: bold;
+          font-size: 18px;
+          color: #9f9f9f;
+        }
+      }
+      .mainArticle{
+        background: #ffffff;
+        box-shadow: 0 0 8px 0 rgba(229,229,229,0.5);
+        width: 310px;
+        .gzhInfo{
+          padding: 10px 15px;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          img{
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 10px;
+          }
+        }
+        .articleItem.active{
+          border: 2px solid #07c160;
+        }
+        .firstArticle{
+          width: 100%;
+          height: 155px;
+          background: #e1e1e1;
+          position: relative;
+          overflow: hidden;
+          .title{
+            height: 100px;
+            background: linear-gradient(-180deg,rgba(0,0,0,0) 0,rgba(0,0,0,0.15) 86%);
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            align-items: flex-end;
+            p{
+              padding: 0 12px;
+              color: #ffffff;
+              font-size: 14px;
+            }
+          }
+          .img{
+            img{
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+          }
+        }
+        .articleItem:last-child .normalArticle .title{
+          position: unset;
+        }
+        .articleItem:last-child .normalArticle .title::after{
+          bottom: 0px;
+          width: calc( 100% - 24px );
+        }
+        .normalArticle{
+          padding: 12px;
+          display: flex;
+          align-items: center;
+          position: relative;
+          .title{
+            margin-right: 10px;
+            flex: 1;
+            position: relative;
+            font-size: 14px;
+            min-height: 48px;
+          }
+          .title::after{
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            width: 100%;
+            height: 1px;
+            background: #e6e6e6;
+          }
+          .img{
+            height: 48px;
+            width: 48px;
+            margin-left: auto;
+            background: #e1e1e1;
+            img{
+              width: 100%;
+              height: 100%;
+            }
+          }
+        }
+        .addBlock{
+          width: 100%;
+          height: 90px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #9a9a9a;
+          font-size: 14px;
+          cursor: pointer;
+          i{
+            font-size: 16px;
+            margin-right: 10px;
+          }
+        }
+      }
+    }
+    .leftShadow{
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 9;
+    }
+  }
+
+  @media (max-width:1200px) {
+    .pageEditorContent{
+      .moreList{
+        display: flex;
+      }
+      .articleList{
+        z-index: 99;
+        background: #f5f5f5;
+        box-shadow: 0 0 20px 0 #cecece;
+        left: -375px;
+        transition: all 0.3s;
+      }
+      .articleList.show{
+        left: 0;
+      }
+    }
+  }
+</style>
